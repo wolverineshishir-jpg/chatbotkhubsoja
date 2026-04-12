@@ -1,0 +1,335 @@
+@media (max-width: 1180px) {
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .dashboard-hero,
+  .dashboard-onboarding-callout,
+  .connections-layout,
+  .wizard-layout,
+  .reporting-overview-grid,
+  .posts-editor-layout,
+  .security-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 960px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 29;
+    border: 0;
+    background: rgba(2, 9, 16, 0.6);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .sidebar {
+    position: fixed;
+    z-index: 30;
+    inset: 0 auto 0 0;
+    width: min(84vw, 320px);
+    height: 100vh;
+    padding: 0;
+    transform: translateX(calc(-100% - 24px));
+    transition: transform 220ms ease;
+  }
+
+  .sidebar-inner {
+    height: 100%;
+    border-radius: 0 24px 24px 0;
+    border-left: 0;
+    border-top: 0;
+    border-bottom: 0;
+    padding: 12px 10px 10px;
+    background:
+      linear-gradient(180deg, rgba(13, 27, 43, 0.98), rgba(8, 18, 31, 0.96)),
+      rgba(5, 14, 25, 0.88);
+    box-shadow: 0 24px 90px rgba(0, 0, 0, 0.4);
+  }
+
+  .sidebar-close {
+    display: inline-flex;
+  }
+
+  .shell.nav-open .sidebar {
+    transform: translateX(0);
+  }
+
+  .shell.nav-open .sidebar-backdrop {
+    display: block;
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .app-stage {
+    min-width: 0;
+  }
+
+  .menu-button {
+    display: inline-flex;
+  }
+
+  .content,
+  .auth-shell,
+  .topbar {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .page-header,
+  .inbox-page,
+  .comments-page,
+  .inbox-thread-layout,
+  .comments-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .page-header {
+    margin-bottom: 22px;
+  }
+
+  .topbar-right {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .topbar-meta {
+    width: 100%;
+  }
+
+  .topbar-chip {
+    flex: 1 1 180px;
+  }
+
+  .topbar-signout {
+    align-self: flex-end;
+  }
+
+  .auth-card {
+    grid-template-columns: 1fr;
+  }
+
+  .message-bubble,
+  .comment-original-card {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 720px) {
+  .content,
+  .auth-shell {
+    padding-top: 20px;
+    padding-bottom: 28px;
+  }
+
+  .topbar {
+    padding-top: 10px;
+  }
+
+  .sidebar-inner,
+  .card,
+  .panel,
+  .auth-showcase,
+  .auth-main,
+  .empty-state {
+    padding: 20px;
+  }
+
+  .sidebar-inner {
+    padding: 10px 8px 8px;
+  }
+
+  .table-card-header,
+  .reply-box,
+  .thread-scroll {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .dashboard-hero-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .conversation-row-top,
+  .comment-row-top,
+  .comments-header,
+  .inbox-thread-header,
+  .reply-toolbar,
+  .reply-actions,
+  .posts-toolbar,
+  .section-heading,
+  .compact-heading,
+  .pagination-row,
+  .table-card-header,
+  .topbar-main {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .table-actions {
+    justify-content: flex-start;
+  }
+
+  .mini-bar-wrap {
+    grid-template-columns: 48px minmax(0, 1fr) 40px;
+  }
+
+  .table-card {
+    overflow: hidden;
+  }
+
+  .table-card > table,
+  .table-card .connections-table {
+    width: calc(100% - 12px);
+    margin: 0 6px 8px;
+    border: 0;
+    background: transparent;
+  }
+
+  .table-card table,
+  .connections-table {
+    min-width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+    table-layout: auto;
+  }
+
+  .table-card table thead,
+  .connections-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  .table-card table tbody,
+  .connections-table tbody {
+    display: block;
+  }
+
+  .table-card table tbody tr,
+  .connections-table tbody tr {
+    display: block;
+    border: 1px solid rgba(181, 212, 255, 0.16);
+    border-radius: 14px;
+    background: rgba(9, 20, 34, 0.6);
+    overflow: hidden;
+  }
+
+  .table-card table tbody td,
+  .connections-table tbody td {
+    display: grid;
+    grid-template-columns: minmax(98px, 38%) minmax(0, 1fr);
+    gap: 12px;
+    align-items: start;
+    padding: 12px 14px;
+    text-align: left;
+    vertical-align: top;
+    border-right: 0;
+    border-bottom: 1px solid rgba(181, 212, 255, 0.1);
+  }
+
+  .table-card table tbody td::before,
+  .connections-table tbody td::before {
+    content: attr(data-label);
+    color: var(--accent);
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    line-height: 1.35;
+    text-transform: uppercase;
+  }
+
+  .table-card table tbody td:last-child,
+  .connections-table tbody td:last-child {
+    border-bottom: 0;
+  }
+
+  .table-card table tbody td[data-full-row="true"],
+  .connections-table tbody td[data-full-row="true"] {
+    display: block;
+    border-bottom: 0;
+    text-align: center;
+  }
+
+  .table-card table tbody td[data-full-row="true"]::before,
+  .connections-table tbody td[data-full-row="true"]::before {
+    content: none;
+  }
+
+  .table-card table .muted-copy,
+  .table-card table .small-copy,
+  .table-card table .form-error,
+  .connections-table td .muted-copy,
+  .connections-table td .small-copy,
+  .connections-table td .form-error {
+    text-align: left;
+  }
+
+  .connections-table-scroll {
+    overflow-x: visible;
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-bottom: 8px;
+  }
+
+  .table-card table td .table-actions,
+  .connections-table td .table-actions,
+  .connections-table .table-actions {
+    justify-content: flex-start;
+    gap: 8px;
+  }
+
+  .two-column-form {
+    grid-template-columns: 1fr;
+  }
+
+  .connection-form {
+    grid-template-columns: 1fr;
+  }
+
+  .feature-access-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .user-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .user-card-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .user-card-actions {
+    justify-content: flex-start;
+  }
+}
+
+.form-panel > h3.super-admin-form-title {
+  margin-top: 0;
+  margin-bottom: 6px;
+  padding-top: 0;
+  padding-bottom: 6px;
+}
+
+.super-admin-form-panel {
+  padding-top: 8px;
+  padding-bottom: 10px;
+}
+
+.form-action-row .form-primary-button.super-admin-submit-button {
+  border-radius: 10px !important;
+}
