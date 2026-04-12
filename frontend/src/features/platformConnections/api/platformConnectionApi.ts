@@ -54,6 +54,10 @@ export async function disconnectPlatformConnection(connectionId: number): Promis
   return response.data;
 }
 
+export async function deletePlatformConnection(connectionId: number): Promise<void> {
+  await apiClient.delete(`/platform-connections/${connectionId}`);
+}
+
 export async function updatePlatformConnectionStatus(
   connectionId: number,
   payload: { status: ConnectionStatus; last_error?: string },

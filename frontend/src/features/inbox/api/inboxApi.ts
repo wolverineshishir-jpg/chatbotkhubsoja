@@ -17,7 +17,10 @@ export async function listConversations(params?: {
   page?: number;
   page_size?: number;
 }): Promise<ConversationListResponse> {
-  const response = await apiClient.get<ConversationListResponse>("/inbox/conversations", { params });
+  const sanitizedParams = Object.fromEntries(
+    Object.entries(params ?? {}).filter(([, value]) => value !== "" && value !== undefined && value !== null),
+  );
+  const response = await apiClient.get<ConversationListResponse>("/inbox/conversations", { params: sanitizedParams });
   return response.data;
 }
 

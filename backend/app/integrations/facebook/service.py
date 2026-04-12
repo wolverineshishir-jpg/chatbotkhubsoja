@@ -138,6 +138,7 @@ class FacebookIntegrationService:
         page_token = self.get_page_access_token(connection)
         profile = self.client.get_page_profile(page_id=self.page_id(connection), access_token=page_token)
         subscriptions = self.client.get_page_subscriptions(page_id=self.page_id(connection), access_token=page_token)
+        is_subscribed = self._has_active_subscription(subscriptions)
         facebook_meta = self.facebook_meta(connection)
         facebook_meta.update(
             {
@@ -148,12 +149,13 @@ class FacebookIntegrationService:
                 "last_synced_at": self.utcnow().isoformat(),
                 "sync_state": "synced",
                 "token_status": "valid",
-                "webhook_subscription_state": "subscribed" if subscriptions.get("data") else "pending",
+                "webhook_subscription_state": "subscribed" if is_subscribed else "inactive",
             }
         )
         connection.external_id = profile.page_id
         connection.external_name = profile.page_name
         connection.metadata_json = {**(connection.metadata_json or {}), "facebook": facebook_meta}
+        connection.webhook_active = is_subscribed
         connection.last_error = None
         connection.status = ConnectionStatus.CONNECTED
         self.db.commit()
@@ -163,11 +165,19 @@ class FacebookIntegrationService:
     def subscribe_webhooks(self, connection: PlatformConnection) -> PlatformConnection:
         page_token = self.get_page_access_token(connection)
         self.client.subscribe_page_to_app(page_id=self.page_id(connection), access_token=page_token)
+        subscriptions = self.client.get_page_subscriptions(page_id=self.page_id(connection), access_token=page_token)
+        is_subscribed = self._has_active_subscription(subscriptions)
         facebook_meta = self.facebook_meta(connection)
-        facebook_meta["webhook_subscription_state"] = "subscribed"
+        facebook_meta["webhook_subscription_state"] = "subscribed" if is_subscribed else "inactive"
         facebook_meta["last_synced_at"] = self.utcnow().isoformat()
         connection.metadata_json = {**(connection.metadata_json or {}), "facebook": facebook_meta}
-        connection.webhook_active = True
+        connection.webhook_active = is_subscribed
+        connection.last_error = None
+        if not is_subscribed:
+            raise FacebookGraphAPIError(
+                "Facebook did not confirm the Page webhook subscription. Check Page permissions, then sync and try again."
+            )
+        connection.status = ConnectionStatus.CONNECTED
         self.db.commit()
         self.db.refresh(connection)
         return connection
@@ -214,6 +224,10 @@ class FacebookIntegrationService:
             "required_permissions": self.OAUTH_SCOPES,
             "tasks": meta.get("tasks", []),
         }
+
+    @staticmethod
+    def _has_active_subscription(subscriptions: dict[str, Any]) -> bool:
+        return bool(subscriptions.get("data"))
 
     @staticmethod
     def facebook_meta(connection: PlatformConnection) -> dict[str, Any]:

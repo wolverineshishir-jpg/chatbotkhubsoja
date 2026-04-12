@@ -8,6 +8,7 @@ import {
   connectWhatsAppManual,
   connectFacebookManualPage,
   createPlatformConnection,
+  deletePlatformConnection,
   disconnectPlatformConnection,
   listPlatformConnections,
   startFacebookOAuth,
@@ -25,6 +26,14 @@ const STATUS_LABELS: Record<string, string> = {
   disconnected: "Disconnected",
   error: "Error",
 };
+
+const isFacebookWebhookSubscribed = (connection: PlatformConnection) =>
+  connection.webhook.webhook_active && connection.integration_summary?.webhook_subscription_state === "subscribed";
+
+const getConnectionErrorMessage = (connection: PlatformConnection, fallback: string) =>
+  connection.last_error ||
+  (connection.status === "action_required" ? "Facebook permissions or token need attention." : null) ||
+  (connection.status === "error" ? fallback : null);
 
 export function ConnectionsPage() {
   const activeAccountId = useAuthStore((state) => state.activeAccountId);
@@ -44,6 +53,7 @@ export function ConnectionsPage() {
     try {
       const response = await listPlatformConnections();
       setConnections(response.items);
+      setShowConnectionsList((current) => current || response.items.length > 0);
       setError(null);
       if (selected) {
         setSelected(response.items.find((item) => item.id === selected.id) ?? null);
@@ -63,6 +73,7 @@ export function ConnectionsPage() {
     const message = (location.state as { message?: string } | null)?.message;
     if (message) {
       setActionMessage(message);
+      setShowConnectionsList(true);
       navigate(location.pathname, { replace: true });
     }
   }, [location.pathname, location.state, navigate]);
@@ -87,6 +98,16 @@ export function ConnectionsPage() {
     await disconnectPlatformConnection(connectionId);
     await loadConnections();
     setActionMessage("Connection disconnected.");
+  };
+
+  const handleDelete = async (connectionId: number) => {
+    if (!window.confirm("Delete this connected channel permanently?")) {
+      return;
+    }
+    await deletePlatformConnection(connectionId);
+    await loadConnections();
+    setSelected((current) => (current?.id === connectionId ? null : current));
+    setActionMessage("Connection deleted.");
   };
 
   const handleFacebookOAuthStart = async () => {
@@ -119,10 +140,22 @@ export function ConnectionsPage() {
 
   const handleSyncFacebook = async (connectionId: number) => {
     setSaving(true);
+    setError(null);
+    setActionMessage(null);
     try {
-      await syncFacebookConnection(connectionId);
+      const connection = await syncFacebookConnection(connectionId);
       await loadConnections();
-      setActionMessage("Facebook connection synced.");
+      const errorMessage = getConnectionErrorMessage(connection, "Unable to sync Facebook connection.");
+      if (errorMessage) {
+        setError(errorMessage);
+        return;
+      }
+      setActionMessage(
+        connection.webhook.webhook_active ? "Facebook connection synced." : "Facebook connection synced. Webhook is still inactive.",
+      );
+    } catch (err: any) {
+      setError(err.response?.data?.detail ?? "Unable to sync Facebook connection.");
+      await loadConnections();
     } finally {
       setSaving(false);
     }
@@ -141,10 +174,23 @@ export function ConnectionsPage() {
 
   const handleSubscribeFacebook = async (connectionId: number) => {
     setSaving(true);
+    setError(null);
+    setActionMessage(null);
     try {
-      await subscribeFacebookConnectionWebhooks(connectionId);
+      const connection = await subscribeFacebookConnectionWebhooks(connectionId);
       await loadConnections();
+      const errorMessage = getConnectionErrorMessage(
+        connection,
+        "Facebook did not confirm the webhook subscription. Check Page permissions and try again.",
+      );
+      if (errorMessage || !isFacebookWebhookSubscribed(connection)) {
+        setError(errorMessage ?? "Facebook did not confirm the webhook subscription. Check Page permissions and try again.");
+        return;
+      }
       setActionMessage("Facebook webhooks subscribed.");
+    } catch (err: any) {
+      setError(err.response?.data?.detail ?? "Unable to subscribe Facebook webhooks.");
+      await loadConnections();
     } finally {
       setSaving(false);
     }
@@ -262,6 +308,9 @@ export function ConnectionsPage() {
                           ) : null}
                           <button type="button" className="link-button danger-link" onClick={() => handleDisconnect(connection.id)}>
                             Disconnect
+                          </button>
+                          <button type="button" className="link-button danger-link" onClick={() => void handleDelete(connection.id)}>
+                            Delete
                           </button>
                         </td>
                       </tr>

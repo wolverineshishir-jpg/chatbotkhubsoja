@@ -120,3 +120,83 @@ def test_superuser_can_manage_platform_connections_without_membership(client):
     )
     assert create_response.status_code == 201
     assert create_response.json()["name"] == "Support WhatsApp"
+
+
+def test_facebook_sync_updates_webhook_state_from_page_subscriptions(client, monkeypatch):
+    _, headers, _ = _register_and_create_account(client, "owner@example.com")
+
+    create_response = client.post(
+        "/api/v1/platform-connections",
+        json={
+            "platform_type": "facebook_page",
+            "name": "Acme Facebook",
+            "external_id": "page_123",
+            "access_token": "facebook-access-token-secret",
+            "webhook": {"webhook_active": True},
+        },
+        headers=headers,
+    )
+    connection_id = create_response.json()["id"]
+
+    from app.integrations.facebook.schemas import FacebookPageProfile
+
+    def fake_get_page_profile(self, *, page_id: str, access_token: str):
+        return FacebookPageProfile(
+            page_id=page_id,
+            page_name="Acme Facebook",
+            category="Business",
+            followers_count=42,
+            picture_url="https://example.com/page.png",
+        )
+
+    def fake_get_page_subscriptions(self, *, page_id: str, access_token: str):
+        return {"data": []}
+
+    monkeypatch.setattr("app.integrations.facebook.client.FacebookGraphAPIClient.get_page_profile", fake_get_page_profile)
+    monkeypatch.setattr("app.integrations.facebook.client.FacebookGraphAPIClient.get_page_subscriptions", fake_get_page_subscriptions)
+
+    sync_response = client.post(f"/api/v1/platform-connections/{connection_id}/facebook/sync", headers=headers)
+
+    assert sync_response.status_code == 200
+    payload = sync_response.json()
+    assert payload["status"] == "connected"
+    assert payload["webhook"]["webhook_active"] is False
+    assert payload["integration_summary"]["webhook_subscription_state"] == "inactive"
+
+
+def test_facebook_subscribe_does_not_report_success_without_confirmed_subscription(client, monkeypatch):
+    _, headers, _ = _register_and_create_account(client, "owner@example.com")
+
+    create_response = client.post(
+        "/api/v1/platform-connections",
+        json={
+            "platform_type": "facebook_page",
+            "name": "Acme Facebook",
+            "external_id": "page_123",
+            "access_token": "facebook-access-token-secret",
+            "webhook": {"webhook_active": False},
+        },
+        headers=headers,
+    )
+    connection_id = create_response.json()["id"]
+
+    def fake_subscribe_page_to_app(self, *, page_id: str, access_token: str):
+        return {"success": True}
+
+    def fake_get_page_subscriptions(self, *, page_id: str, access_token: str):
+        return {"data": []}
+
+    monkeypatch.setattr("app.integrations.facebook.client.FacebookGraphAPIClient.subscribe_page_to_app", fake_subscribe_page_to_app)
+    monkeypatch.setattr("app.integrations.facebook.client.FacebookGraphAPIClient.get_page_subscriptions", fake_get_page_subscriptions)
+
+    subscribe_response = client.post(
+        f"/api/v1/platform-connections/{connection_id}/facebook/subscribe-webhooks",
+        headers=headers,
+    )
+
+    assert subscribe_response.status_code == 200
+    payload = subscribe_response.json()
+    assert payload["status"] == "error"
+    assert payload["webhook"]["webhook_active"] is False
+    assert payload["integration_summary"]["webhook_subscription_state"] == "inactive"
+    assert "did not confirm the Page webhook subscription" in payload["last_error"]

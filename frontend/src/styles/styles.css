@@ -630,6 +630,15 @@ input[type="checkbox"] {
   backdrop-filter: blur(14px);
 }
 
+.topbar-usage-chip {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 1;
+  transform: translateX(-50%);
+  text-align: center;
+}
+
 .topbar-main {
   display: flex;
   align-items: center;
@@ -654,6 +663,16 @@ input[type="checkbox"] {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.topbar-workspace-select {
+  min-width: 220px;
+}
+
+.topbar-workspace-select .custom-select-trigger {
+  min-height: 30px;
+  padding-top: 3px;
+  padding-bottom: 3px;
 }
 
 .topbar-right {

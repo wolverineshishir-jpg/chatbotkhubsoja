@@ -199,7 +199,11 @@ class InboxService:
             select(Conversation)
             .where(Conversation.account_id == account_id)
             .options(selectinload(Conversation.assigned_to_user))
-            .order_by(Conversation.latest_message_at.desc().nullslast(), Conversation.updated_at.desc())
+            .order_by(
+                Conversation.latest_message_at.is_(None).asc(),
+                Conversation.latest_message_at.desc(),
+                Conversation.updated_at.desc(),
+            )
         )
 
     def _get_conversation(self, account_id: int, conversation_id: int) -> Conversation:

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 
+import { CustomSelect } from "../components/common/CustomSelect";
 import { useAuthStore } from "../features/auth/store/authStore";
 import { logout } from "../features/auth/api/authApi";
 import { getBillingSummary } from "../features/reports/api/reportApi";
@@ -67,11 +68,32 @@ export function AppLayout() {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const activeAccountId = useAuthStore((state) => state.activeAccountId);
+  const setActiveAccountId = useAuthStore((state) => state.setActiveAccountId);
   const clear = useAuthStore((state) => state.clear);
   const refreshToken = useAuthStore((state) => state.refreshToken);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [usedTokenPercent, setUsedTokenPercent] = useState<number | null>(null);
   useResponsiveTables(location.pathname);
+
+  const activeMemberships = useMemo(
+    () => (user?.memberships ?? []).filter((membership) => membership.status === "active"),
+    [user],
+  );
+
+  const activeWorkspace = useMemo(
+    () => activeMemberships.find((membership) => membership.account_id === activeAccountId) ?? activeMemberships[0] ?? null,
+    [activeAccountId, activeMemberships],
+  );
+
+  const workspaceOptions = useMemo(
+    () =>
+      activeMemberships.map((membership) => ({
+        value: String(membership.account_id),
+        label: membership.account_name,
+        helper: `${membership.role} access`,
+      })),
+    [activeMemberships],
+  );
 
   const visibleSections = useMemo(() => {
     if (!user || user.user_role !== "superAdmin") {
@@ -234,11 +256,27 @@ export function AppLayout() {
             </div>
           </div>
 
+          <div className="topbar-chip topbar-chip-inline topbar-usage-chip">
+            <strong>{`Token used: ${usedTokenPercent ?? "--"}%`}</strong>
+          </div>
+
           <div className="topbar-right">
             <div className="topbar-meta">
-              <div className="topbar-chip topbar-chip-inline">
-                <strong>{`Token used: ${usedTokenPercent ?? "--"}%`}</strong>
-              </div>
+              {workspaceOptions.length > 1 ? (
+                <div className="topbar-workspace-select">
+                  <CustomSelect
+                    value={String(activeWorkspace?.account_id ?? "")}
+                    onChange={(value) => setActiveAccountId(value ? Number(value) : null)}
+                    options={workspaceOptions}
+                    placeholder="Select workspace"
+                    variant="compact"
+                  />
+                </div>
+              ) : activeWorkspace ? (
+                <div className="topbar-chip topbar-chip-inline">
+                  <strong>{activeWorkspace.account_name}</strong>
+                </div>
+              ) : null}
             </div>
             <button className="ghost-button topbar-signout" type="button" onClick={handleLogout}>
               Sign out

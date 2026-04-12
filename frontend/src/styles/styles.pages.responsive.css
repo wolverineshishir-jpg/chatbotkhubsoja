@@ -4,6 +4,12 @@
     flex-direction: column;
   }
 
+  .topbar-usage-chip {
+    position: static;
+    align-self: center;
+    transform: none;
+  }
+
   .dashboard-hero,
   .dashboard-onboarding-callout,
   .connections-layout,

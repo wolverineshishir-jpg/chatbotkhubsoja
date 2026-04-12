@@ -37,6 +37,12 @@ class FacebookGraphAPIError(Exception):
 
 
 class FacebookGraphAPIClient:
+    PAGE_SUBSCRIBED_FIELDS = [
+        "messages",
+        "messaging_postbacks",
+        "feed",
+    ]
+
     def __init__(self) -> None:
         self.settings = get_settings()
         self.base_url = f"{self.settings.facebook_graph_api_base_url}/{self.settings.facebook_graph_api_version}"
@@ -115,7 +121,12 @@ class FacebookGraphAPIClient:
         )
 
     def subscribe_page_to_app(self, *, page_id: str, access_token: str) -> dict[str, Any]:
-        return self._request("POST", f"/{page_id}/subscribed_apps", access_token=access_token)
+        return self._request(
+            "POST",
+            f"/{page_id}/subscribed_apps",
+            access_token=access_token,
+            params={"subscribed_fields": ",".join(self.PAGE_SUBSCRIBED_FIELDS)},
+        )
 
     def get_page_subscriptions(self, *, page_id: str, access_token: str) -> dict[str, Any]:
         return self._request("GET", f"/{page_id}/subscribed_apps", access_token=access_token)
