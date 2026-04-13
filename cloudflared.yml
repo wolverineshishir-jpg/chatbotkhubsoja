@@ -1,0 +1,18 @@
+tunnel: 882e3a38-8577-435e-9a5b-31d454b1a463
+credentials-file: /home/magus/.cloudflared/882e3a38-8577-435e-9a5b-31d454b1a463.json
+
+ingress:
+  # KhubSoja Frontend (root domain)
+  - hostname: allahcan.cyou
+    service: http://localhost:5173
+
+  # KhubSoja API
+  - hostname: api.allahcan.cyou
+    service: http://localhost:8000
+
+  # KhubSoja Webhook
+  - hostname: webhook.allahcan.cyou
+    service: http://localhost:8000
+
+  # Catch-all rule (required)
+  - service: http_status:404

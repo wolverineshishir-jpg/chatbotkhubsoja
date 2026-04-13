@@ -1,0 +1,9 @@
+version: '3.8'
+
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:2025.11.1
+    container_name: cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${TUNNEL_TOKEN}
+    network_mode: host
