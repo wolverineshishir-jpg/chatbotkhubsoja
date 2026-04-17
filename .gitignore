@@ -23,3 +23,4 @@ node_modules/
 backend/.venv/
 dist/
 frontend/dist/
+backend/celerybeat-schedule
